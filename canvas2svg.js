@@ -9,7 +9,8 @@
  *  Kerry Liu
  *
  *  Copyright (c) 2014 Gliffy Inc.
- *  Update by Isaque Neves in 2023
+ *  Update by Isaque Neves
+ *  https://github.com/insinfo/canvas2svg/blob/master/canvas2svg.js
  */
 
 ; (function () {
@@ -1901,7 +1902,7 @@
 
     ctx.prototype.addEventListener = function (type, listener, eventListenerOptions) {
         //console.log('ctx.prototype.addEventListener');
-        // this.__canvas.addEventListener(type, listener, eventListenerOptions);
+         this.__canvas.addEventListener(type, listener, eventListenerOptions);
     };
 
     //add options for alternative namespace
