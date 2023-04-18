@@ -9,17 +9,19 @@
  *  Kerry Liu
  *
  *  Copyright (c) 2014 Gliffy Inc.
+ *  Update by Isaque Neves in 2023
  */
 
-;(function () {
+; (function () {
     "use strict";
 
     var STYLES, ctx, CanvasGradient, CanvasPattern, namedEntities;
 
+
     //helper function to format a string
     function format(str, args) {
         var keys = Object.keys(args), i;
-        for (i=0; i<keys.length; i++) {
+        for (i = 0; i < keys.length; i++) {
             str = str.replace(new RegExp("\\{" + keys[i] + "\\}", "gi"), args[keys[i]]);
         }
         return str;
@@ -51,7 +53,7 @@
         for (i = 0; i < items.length; i += 2) {
             entity = '&' + items[i + 1] + ';';
             base10 = parseInt(items[i], radix);
-            lookup[entity] = '&#'+base10+';';
+            lookup[entity] = '&#' + base10 + ';';
         }
         //FF and IE need to create a regex from hex values ie &nbsp; == \xa0
         lookup["\\xa0"] = '&#160;';
@@ -61,14 +63,14 @@
     //helper function to map canvas-textAlign to svg-textAnchor
     function getTextAnchor(textAlign) {
         //TODO: support rtl languages
-        var mapping = {"left":"start", "right":"end", "center":"middle", "start":"start", "end":"end"};
+        var mapping = { "left": "start", "right": "end", "center": "middle", "start": "start", "end": "end" };
         return mapping[textAlign] || mapping.start;
     }
 
     //helper function to map canvas-textBaseline to svg-dominantBaseline
     function getDominantBaseline(textBaseline) {
         //INFO: not supported in all browsers
-        var mapping = {"alphabetic": "alphabetic", "hanging": "hanging", "top":"text-before-edge", "bottom":"text-after-edge", "middle":"central"};
+        var mapping = { "alphabetic": "alphabetic", "hanging": "hanging", "top": "text-before-edge", "bottom": "text-after-edge", "middle": "central" };
         return mapping[textBaseline] || mapping.alphabetic;
     }
 
@@ -76,103 +78,103 @@
     // entity mapping courtesy of tinymce
     namedEntities = createNamedToNumberedLookup(
         '50,nbsp,51,iexcl,52,cent,53,pound,54,curren,55,yen,56,brvbar,57,sect,58,uml,59,copy,' +
-            '5a,ordf,5b,laquo,5c,not,5d,shy,5e,reg,5f,macr,5g,deg,5h,plusmn,5i,sup2,5j,sup3,5k,acute,' +
-            '5l,micro,5m,para,5n,middot,5o,cedil,5p,sup1,5q,ordm,5r,raquo,5s,frac14,5t,frac12,5u,frac34,' +
-            '5v,iquest,60,Agrave,61,Aacute,62,Acirc,63,Atilde,64,Auml,65,Aring,66,AElig,67,Ccedil,' +
-            '68,Egrave,69,Eacute,6a,Ecirc,6b,Euml,6c,Igrave,6d,Iacute,6e,Icirc,6f,Iuml,6g,ETH,6h,Ntilde,' +
-            '6i,Ograve,6j,Oacute,6k,Ocirc,6l,Otilde,6m,Ouml,6n,times,6o,Oslash,6p,Ugrave,6q,Uacute,' +
-            '6r,Ucirc,6s,Uuml,6t,Yacute,6u,THORN,6v,szlig,70,agrave,71,aacute,72,acirc,73,atilde,74,auml,' +
-            '75,aring,76,aelig,77,ccedil,78,egrave,79,eacute,7a,ecirc,7b,euml,7c,igrave,7d,iacute,7e,icirc,' +
-            '7f,iuml,7g,eth,7h,ntilde,7i,ograve,7j,oacute,7k,ocirc,7l,otilde,7m,ouml,7n,divide,7o,oslash,' +
-            '7p,ugrave,7q,uacute,7r,ucirc,7s,uuml,7t,yacute,7u,thorn,7v,yuml,ci,fnof,sh,Alpha,si,Beta,' +
-            'sj,Gamma,sk,Delta,sl,Epsilon,sm,Zeta,sn,Eta,so,Theta,sp,Iota,sq,Kappa,sr,Lambda,ss,Mu,' +
-            'st,Nu,su,Xi,sv,Omicron,t0,Pi,t1,Rho,t3,Sigma,t4,Tau,t5,Upsilon,t6,Phi,t7,Chi,t8,Psi,' +
-            't9,Omega,th,alpha,ti,beta,tj,gamma,tk,delta,tl,epsilon,tm,zeta,tn,eta,to,theta,tp,iota,' +
-            'tq,kappa,tr,lambda,ts,mu,tt,nu,tu,xi,tv,omicron,u0,pi,u1,rho,u2,sigmaf,u3,sigma,u4,tau,' +
-            'u5,upsilon,u6,phi,u7,chi,u8,psi,u9,omega,uh,thetasym,ui,upsih,um,piv,812,bull,816,hellip,' +
-            '81i,prime,81j,Prime,81u,oline,824,frasl,88o,weierp,88h,image,88s,real,892,trade,89l,alefsym,' +
-            '8cg,larr,8ch,uarr,8ci,rarr,8cj,darr,8ck,harr,8dl,crarr,8eg,lArr,8eh,uArr,8ei,rArr,8ej,dArr,' +
-            '8ek,hArr,8g0,forall,8g2,part,8g3,exist,8g5,empty,8g7,nabla,8g8,isin,8g9,notin,8gb,ni,8gf,prod,' +
-            '8gh,sum,8gi,minus,8gn,lowast,8gq,radic,8gt,prop,8gu,infin,8h0,ang,8h7,and,8h8,or,8h9,cap,8ha,cup,' +
-            '8hb,int,8hk,there4,8hs,sim,8i5,cong,8i8,asymp,8j0,ne,8j1,equiv,8j4,le,8j5,ge,8k2,sub,8k3,sup,8k4,' +
-            'nsub,8k6,sube,8k7,supe,8kl,oplus,8kn,otimes,8l5,perp,8m5,sdot,8o8,lceil,8o9,rceil,8oa,lfloor,8ob,' +
-            'rfloor,8p9,lang,8pa,rang,9ea,loz,9j0,spades,9j3,clubs,9j5,hearts,9j6,diams,ai,OElig,aj,oelig,b0,' +
-            'Scaron,b1,scaron,bo,Yuml,m6,circ,ms,tilde,802,ensp,803,emsp,809,thinsp,80c,zwnj,80d,zwj,80e,lrm,' +
-            '80f,rlm,80j,ndash,80k,mdash,80o,lsquo,80p,rsquo,80q,sbquo,80s,ldquo,80t,rdquo,80u,bdquo,810,dagger,' +
-            '811,Dagger,81g,permil,81p,lsaquo,81q,rsaquo,85c,euro', 32);
+        '5a,ordf,5b,laquo,5c,not,5d,shy,5e,reg,5f,macr,5g,deg,5h,plusmn,5i,sup2,5j,sup3,5k,acute,' +
+        '5l,micro,5m,para,5n,middot,5o,cedil,5p,sup1,5q,ordm,5r,raquo,5s,frac14,5t,frac12,5u,frac34,' +
+        '5v,iquest,60,Agrave,61,Aacute,62,Acirc,63,Atilde,64,Auml,65,Aring,66,AElig,67,Ccedil,' +
+        '68,Egrave,69,Eacute,6a,Ecirc,6b,Euml,6c,Igrave,6d,Iacute,6e,Icirc,6f,Iuml,6g,ETH,6h,Ntilde,' +
+        '6i,Ograve,6j,Oacute,6k,Ocirc,6l,Otilde,6m,Ouml,6n,times,6o,Oslash,6p,Ugrave,6q,Uacute,' +
+        '6r,Ucirc,6s,Uuml,6t,Yacute,6u,THORN,6v,szlig,70,agrave,71,aacute,72,acirc,73,atilde,74,auml,' +
+        '75,aring,76,aelig,77,ccedil,78,egrave,79,eacute,7a,ecirc,7b,euml,7c,igrave,7d,iacute,7e,icirc,' +
+        '7f,iuml,7g,eth,7h,ntilde,7i,ograve,7j,oacute,7k,ocirc,7l,otilde,7m,ouml,7n,divide,7o,oslash,' +
+        '7p,ugrave,7q,uacute,7r,ucirc,7s,uuml,7t,yacute,7u,thorn,7v,yuml,ci,fnof,sh,Alpha,si,Beta,' +
+        'sj,Gamma,sk,Delta,sl,Epsilon,sm,Zeta,sn,Eta,so,Theta,sp,Iota,sq,Kappa,sr,Lambda,ss,Mu,' +
+        'st,Nu,su,Xi,sv,Omicron,t0,Pi,t1,Rho,t3,Sigma,t4,Tau,t5,Upsilon,t6,Phi,t7,Chi,t8,Psi,' +
+        't9,Omega,th,alpha,ti,beta,tj,gamma,tk,delta,tl,epsilon,tm,zeta,tn,eta,to,theta,tp,iota,' +
+        'tq,kappa,tr,lambda,ts,mu,tt,nu,tu,xi,tv,omicron,u0,pi,u1,rho,u2,sigmaf,u3,sigma,u4,tau,' +
+        'u5,upsilon,u6,phi,u7,chi,u8,psi,u9,omega,uh,thetasym,ui,upsih,um,piv,812,bull,816,hellip,' +
+        '81i,prime,81j,Prime,81u,oline,824,frasl,88o,weierp,88h,image,88s,real,892,trade,89l,alefsym,' +
+        '8cg,larr,8ch,uarr,8ci,rarr,8cj,darr,8ck,harr,8dl,crarr,8eg,lArr,8eh,uArr,8ei,rArr,8ej,dArr,' +
+        '8ek,hArr,8g0,forall,8g2,part,8g3,exist,8g5,empty,8g7,nabla,8g8,isin,8g9,notin,8gb,ni,8gf,prod,' +
+        '8gh,sum,8gi,minus,8gn,lowast,8gq,radic,8gt,prop,8gu,infin,8h0,ang,8h7,and,8h8,or,8h9,cap,8ha,cup,' +
+        '8hb,int,8hk,there4,8hs,sim,8i5,cong,8i8,asymp,8j0,ne,8j1,equiv,8j4,le,8j5,ge,8k2,sub,8k3,sup,8k4,' +
+        'nsub,8k6,sube,8k7,supe,8kl,oplus,8kn,otimes,8l5,perp,8m5,sdot,8o8,lceil,8o9,rceil,8oa,lfloor,8ob,' +
+        'rfloor,8p9,lang,8pa,rang,9ea,loz,9j0,spades,9j3,clubs,9j5,hearts,9j6,diams,ai,OElig,aj,oelig,b0,' +
+        'Scaron,b1,scaron,bo,Yuml,m6,circ,ms,tilde,802,ensp,803,emsp,809,thinsp,80c,zwnj,80d,zwj,80e,lrm,' +
+        '80f,rlm,80j,ndash,80k,mdash,80o,lsquo,80p,rsquo,80q,sbquo,80s,ldquo,80t,rdquo,80u,bdquo,810,dagger,' +
+        '811,Dagger,81g,permil,81p,lsaquo,81q,rsaquo,85c,euro', 32);
 
 
     //Some basic mappings for attributes and default values.
     STYLES = {
-        "strokeStyle":{
-            svgAttr : "stroke", //corresponding svg attribute
-            canvas : "#000000", //canvas default
-            svg : "none",       //svg default
-            apply : "stroke"    //apply on stroke() or fill()
+        "strokeStyle": {
+            svgAttr: "stroke", //corresponding svg attribute
+            canvas: "#000000", //canvas default
+            svg: "none",       //svg default
+            apply: "stroke"    //apply on stroke() or fill()
         },
-        "fillStyle":{
-            svgAttr : "fill",
-            canvas : "#000000",
-            svg : null, //svg default is black, but we need to special case this to handle canvas stroke without fill
-            apply : "fill"
+        "fillStyle": {
+            svgAttr: "fill",
+            canvas: "#000000",
+            svg: null, //svg default is black, but we need to special case this to handle canvas stroke without fill
+            apply: "fill"
         },
-        "lineCap":{
-            svgAttr : "stroke-linecap",
-            canvas : "butt",
-            svg : "butt",
-            apply : "stroke"
+        "lineCap": {
+            svgAttr: "stroke-linecap",
+            canvas: "butt",
+            svg: "butt",
+            apply: "stroke"
         },
-        "lineJoin":{
-            svgAttr : "stroke-linejoin",
-            canvas : "miter",
-            svg : "miter",
-            apply : "stroke"
+        "lineJoin": {
+            svgAttr: "stroke-linejoin",
+            canvas: "miter",
+            svg: "miter",
+            apply: "stroke"
         },
-        "miterLimit":{
-            svgAttr : "stroke-miterlimit",
-            canvas : 10,
-            svg : 4,
-            apply : "stroke"
+        "miterLimit": {
+            svgAttr: "stroke-miterlimit",
+            canvas: 10,
+            svg: 4,
+            apply: "stroke"
         },
-        "lineWidth":{
-            svgAttr : "stroke-width",
-            canvas : 1,
-            svg : 1,
-            apply : "stroke"
+        "lineWidth": {
+            svgAttr: "stroke-width",
+            canvas: 1,
+            svg: 1,
+            apply: "stroke"
         },
         "globalAlpha": {
-            svgAttr : "opacity",
-            canvas : 1,
-            svg : 1,
-            apply :  "fill stroke"
+            svgAttr: "opacity",
+            canvas: 1,
+            svg: 1,
+            apply: "fill stroke"
         },
-        "font":{
+        "font": {
             //font converts to multiple svg attributes, there is custom logic for this
-            canvas : "10px sans-serif"
+            canvas: "10px sans-serif"
         },
-        "shadowColor":{
-            canvas : "#000000"
+        "shadowColor": {
+            canvas: "#000000"
         },
-        "shadowOffsetX":{
-            canvas : 0
+        "shadowOffsetX": {
+            canvas: 0
         },
-        "shadowOffsetY":{
-            canvas : 0
+        "shadowOffsetY": {
+            canvas: 0
         },
-        "shadowBlur":{
-            canvas : 0
+        "shadowBlur": {
+            canvas: 0
         },
-        "textAlign":{
-            canvas : "start"
+        "textAlign": {
+            canvas: "start"
         },
-        "textBaseline":{
-            canvas : "alphabetic"
+        "textBaseline": {
+            canvas: "alphabetic"
         },
-        "lineDash" : {
-            svgAttr : "stroke-dasharray",
-            canvas : [],
-            svg : null,
-            apply : "stroke"
+        "lineDash": {
+            svgAttr: "stroke-dasharray",
+            canvas: [],
+            svg: null,
+            apply: "stroke"
         }
     };
 
@@ -196,7 +198,7 @@
             //separate alpha value, since webkit can't handle it
             regex = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d?\.?\d*)\s*\)/gi;
             matches = regex.exec(color);
-            stop.setAttribute("stop-color", format("rgb({r},{g},{b})", {r:matches[1], g:matches[2], b:matches[3]}));
+            stop.setAttribute("stop-color", format("rgb({r},{g},{b})", { r: matches[1], g: matches[2], b: matches[3] }));
             stop.setAttribute("stop-opacity", matches[4]);
         } else {
             stop.setAttribute("stop-color", color);
@@ -219,14 +221,14 @@
      * document - the document object (defaults to the current document)
      */
     ctx = function (o) {
-        var defaultOptions = { width:500, height:500, enableMirroring : false}, options;
+        var defaultOptions = { width: 500, height: 500, enableMirroring: false }, options;
 
         //keep support for this way of calling C2S: new C2S(width,height)
         if (arguments.length > 1) {
             options = defaultOptions;
             options.width = arguments[0];
             options.height = arguments[1];
-        } else if ( !o ) {
+        } else if (!o) {
             options = defaultOptions;
         } else {
             options = o;
@@ -249,6 +251,7 @@
         // if a context is passed in, we know a canvas already exist
         if (options.ctx) {
             this.__ctx = options.ctx;
+            this.__canvas = options.canvas;
         } else {
             this.__canvas = this.__document.createElement("canvas");
             this.__ctx = this.__canvas.getContext("2d");
@@ -278,6 +281,209 @@
         this.__root.appendChild(this.__currentElement);
     };
 
+    // Object.defineProperty(ctx.prototype, "fillStyle", {
+    //     get: function fillStyle() {
+    //     }
+    // });
+
+    // isaque adicionou isso para funcionar com ChartJS
+    ctx.prototype.__defineGetter__("fillStyle", function () {
+        //console.log('ctx.prototype.__defineGetter__');
+        return this._fillStyle;
+    });
+    ctx.prototype.__defineSetter__("fillStyle", function (val) {
+        //console.log(`ctx.prototype.__defineSetter ${val}`);
+        this.__ctx.fillStyle = val;
+        this._fillStyle = val;
+    });
+    ctx.prototype.__defineGetter__("strokeStyle", function () {
+        return this._strokeStyle;
+    });
+    ctx.prototype.__defineSetter__("strokeStyle", function (val) {
+        this.__ctx.strokeStyle = val;
+        this._strokeStyle = val;
+    });
+    ctx.prototype.__defineGetter__("lineCap", function () {
+        return this._lineCap;
+    });
+    ctx.prototype.__defineSetter__("lineCap", function (val) {
+        this.__ctx.lineCap = val;
+        this._lineCap = val;
+    });
+    ctx.prototype.__defineGetter__("lineJoin", function () {
+        return this._lineJoin;
+    });
+    ctx.prototype.__defineSetter__("lineJoin", function (val) {
+        this.__ctx.lineJoin = val;
+        this._lineJoin = val;
+    });
+    ctx.prototype.__defineGetter__("miterLimit", function () {
+        return this._miterLimit;
+    });
+    ctx.prototype.__defineSetter__("miterLimit", function (val) {
+        this.__ctx.miterLimit = val;
+        this._miterLimit = val;
+    });
+    ctx.prototype.__defineGetter__("lineWidth", function () {
+        return this._lineWidth;
+    });
+    ctx.prototype.__defineSetter__("lineWidth", function (val) {
+        this.__ctx.lineWidth = val;
+        this._lineWidth = val;
+    });
+    ctx.prototype.__defineGetter__("globalAlpha", function () {
+        return this._globalAlpha;
+    });
+    ctx.prototype.__defineSetter__("globalAlpha", function (val) {
+        this.__ctx.globalAlpha = val;
+        this._globalAlpha = val;
+    });
+    ctx.prototype.__defineGetter__("font", function () {
+        return this._font;
+    });
+    ctx.prototype.__defineSetter__("font", function (val) {
+        this.__ctx.font = val;
+        this._font = val;
+    });
+    ctx.prototype.__defineGetter__("shadowColor", function () {
+        return this._shadowColor;
+    });
+    ctx.prototype.__defineSetter__("shadowColor", function (val) {
+        this.__ctx.shadowColor = val;
+        this._shadowColor = val;
+    });
+    ctx.prototype.__defineGetter__("shadowOffsetX", function () {
+        return this._shadowOffsetX;
+    });
+    ctx.prototype.__defineSetter__("shadowOffsetX", function (val) {
+        this.__ctx.shadowOffsetX = val;
+        this._shadowOffsetX = val;
+    });
+    ctx.prototype.__defineGetter__("shadowOffsetY", function () {
+        return this._shadowOffsetY;
+    });
+    ctx.prototype.__defineSetter__("shadowOffsetY", function (val) {
+        this.__ctx.shadowOffsetY = val;
+        this._shadowOffsetY = val;
+    });
+    ctx.prototype.__defineGetter__("shadowBlur", function () {
+        return this._shadowBlur;
+    });
+    ctx.prototype.__defineSetter__("shadowBlur", function (val) {
+        this.__ctx.shadowBlur = val;
+        this._shadowBlur = val;
+    });
+    ctx.prototype.__defineGetter__("textAlign", function () {
+        return this._textAlign;
+    });
+    ctx.prototype.__defineSetter__("textAlign", function (val) {
+        this.__ctx.textAlign = val;
+        this._textAlign = val;
+    });
+    ctx.prototype.__defineGetter__("textBaseline", function () {
+        return this._textBaseline;
+    });
+    ctx.prototype.__defineSetter__("textBaseline", function (val) {
+        this.__ctx.textBaseline = val;
+        this._textBaseline = val;
+    });
+    ctx.prototype.__defineGetter__("lineDash", function () {
+        return this._lineDash;
+    });
+    ctx.prototype.__defineSetter__("lineDash", function (val) {
+        this.__ctx.lineDash = val;
+        this._lineDash = val;
+    });
+    ctx.prototype.__defineGetter__("filter", function () {
+        return this._filter;
+    });
+    ctx.prototype.__defineSetter__("filter", function (val) {
+        this.__ctx.filter = val;
+        this._filter = val;
+    });
+    ctx.prototype.__defineGetter__("fontKerning", function () {
+        return this._fontKerning;
+    });
+    ctx.prototype.__defineSetter__("fontKerning", function (val) {
+        this.__ctx.fontKerning = val;
+        this._fontKerning = val;
+    });
+    ctx.prototype.__defineGetter__("fontStretch", function () {
+        return this._fontStretch;
+    });
+    ctx.prototype.__defineSetter__("fontStretch", function (val) {
+        this.__ctx.fontStretch = val;
+        this._fontStretch = val;
+    });
+    ctx.prototype.__defineGetter__("fontVariantCaps", function () {
+        return this._fontVariantCaps;
+    });
+    ctx.prototype.__defineSetter__("fontVariantCaps", function (val) {
+        this.__ctx.fontVariantCaps = val;
+        this._fontVariantCaps = val;
+    });
+    ctx.prototype.__defineGetter__("direction", function () {
+        return this._direction;
+    });
+    ctx.prototype.__defineSetter__("direction", function (val) {
+        this.__ctx.direction = val;
+        this._direction = val;
+    });
+    ctx.prototype.__defineGetter__("globalCompositeOperation", function () {
+        return this._globalCompositeOperation;
+    });
+    ctx.prototype.__defineSetter__("globalCompositeOperation", function (val) {
+        this.__ctx.globalCompositeOperation = val;
+        this._globalCompositeOperation = val;
+    });
+    ctx.prototype.__defineGetter__("imageSmoothingEnabled", function () {
+        return this._imageSmoothingEnabled;
+    });
+    ctx.prototype.__defineSetter__("imageSmoothingEnabled", function (val) {
+        this.__ctx.imageSmoothingEnabled = val;
+        this._imageSmoothingEnabled = val;
+    });
+    ctx.prototype.__defineGetter__("imageSmoothingQuality", function () {
+        return this._imageSmoothingQuality;
+    });
+    ctx.prototype.__defineSetter__("imageSmoothingQuality", function (val) {
+        this.__ctx.imageSmoothingQuality = val;
+        this._imageSmoothingQuality = val;
+    });
+    ctx.prototype.__defineGetter__("letterSpacing", function () {
+        return this._letterSpacing;
+    });
+    ctx.prototype.__defineSetter__("letterSpacing", function (val) {
+        this.__ctx.letterSpacing = val;
+        this._letterSpacing = val;
+    });
+    ctx.prototype.__defineGetter__("lineDashOffset", function () {
+        return this._lineDashOffset;
+    });
+    ctx.prototype.__defineSetter__("lineDashOffset", function (val) {
+        this.__ctx.lineDashOffset = val;
+        this._lineDashOffset = val;
+    });
+    ctx.prototype.__defineGetter__("textRendering", function () {
+        return this._textRendering;
+    });
+    ctx.prototype.__defineSetter__("textRendering", function (val) {
+        this.__ctx.textRendering = val;
+        this._textRendering = val;
+    });
+    ctx.prototype.__defineGetter__("wordSpacing", function () {
+        return this._wordSpacing;
+    });
+    ctx.prototype.__defineSetter__("wordSpacing", function (val) {
+        this.__ctx.wordSpacing = val;
+        this._wordSpacing = val;
+    });
+
+
+    ctx.prototype.__defineGetter__("parentNode", function () {
+        return this.__canvas.parentNode;
+    });
+
 
     /**
      * Creates the specified svg element
@@ -295,7 +501,7 @@
             element.setAttribute("fill", "none");
             element.setAttribute("stroke", "none");
         }
-        for (i=0; i<keys.length; i++) {
+        for (i = 0; i < keys.length; i++) {
             key = keys[i];
             element.setAttribute(key, properties[key]);
         }
@@ -307,11 +513,13 @@
      * @private
      */
     ctx.prototype.__setDefaultStyles = function () {
+        //console.log(`ctx.prototype.__setDefaultStyles `);
         //default 2d canvas context properties see:http://www.w3.org/TR/2dcontext/
         var keys = Object.keys(STYLES), i, key;
-        for (i=0; i<keys.length; i++) {
+        for (i = 0; i < keys.length; i++) {
             key = keys[i];
             this[key] = STYLES[key].canvas;
+            //console.log(`ctx.prototype.__setDefaultStyles ${key} ${this[key]}`);
         }
     };
 
@@ -321,8 +529,9 @@
      * @private
      */
     ctx.prototype.__applyStyleState = function (styleState) {
+        // console.log(`ctx.prototype.__applyStyleState`);
         var keys = Object.keys(styleState), i, key;
-        for (i=0; i<keys.length; i++) {
+        for (i = 0; i < keys.length; i++) {
             key = keys[i];
             this[key] = styleState[key];
         }
@@ -334,8 +543,9 @@
      * @private
      */
     ctx.prototype.__getStyleState = function () {
+        // console.log(`ctx.prototype.__getStyleState`);
         var i, styleState = {}, keys = Object.keys(STYLES), key;
-        for (i=0; i<keys.length; i++) {
+        for (i = 0; i < keys.length; i++) {
             key = keys[i];
             styleState[key] = this[key];
         }
@@ -348,56 +558,59 @@
      * @private
      */
     ctx.prototype.__applyStyleToCurrentElement = function (type) {
-    	var currentElement = this.__currentElement;
-    	var currentStyleGroup = this.__currentElementsToStyle;
-    	if (currentStyleGroup) {
-    		currentElement.setAttribute(type, "");
-    		currentElement = currentStyleGroup.element;
-    		currentStyleGroup.children.forEach(function (node) {
-    			node.setAttribute(type, "");
-    		})
-    	}
+        //console.log(`ctx.prototype.__applyStyleToCurrentElement ${type}`);
+
+        var currentElement = this.__currentElement;
+        var currentStyleGroup = this.__currentElementsToStyle;
+        if (currentStyleGroup) {
+            currentElement.setAttribute(type, "");
+            currentElement = currentStyleGroup.element;
+            currentStyleGroup.children.forEach(function (node) {
+                node.setAttribute(type, "");
+            })
+        }
 
         var keys = Object.keys(STYLES), i, style, value, id, regex, matches;
         for (i = 0; i < keys.length; i++) {
             style = STYLES[keys[i]];
             value = this[keys[i]];
+            // console.log(`ctx.prototype.__applyStyleToCurrentElement value ${keys[i]} ${value}`);
             if (style.apply) {
                 //is this a gradient or pattern?
                 if (value instanceof CanvasPattern) {
                     //pattern
                     if (value.__ctx) {
                         //copy over defs
-                        while(value.__ctx.__defs.childNodes.length) {
+                        while (value.__ctx.__defs.childNodes.length) {
                             id = value.__ctx.__defs.childNodes[0].getAttribute("id");
                             this.__ids[id] = id;
                             this.__defs.appendChild(value.__ctx.__defs.childNodes[0]);
                         }
                     }
-                    currentElement.setAttribute(style.apply, format("url(#{id})", {id:value.__root.getAttribute("id")}));
+                    currentElement.setAttribute(style.apply, format("url(#{id})", { id: value.__root.getAttribute("id") }));
                 }
                 else if (value instanceof CanvasGradient) {
                     //gradient
-                    currentElement.setAttribute(style.apply, format("url(#{id})", {id:value.__root.getAttribute("id")}));
-                } else if (style.apply.indexOf(type)!==-1 && style.svg !== value) {
+                    currentElement.setAttribute(style.apply, format("url(#{id})", { id: value.__root.getAttribute("id") }));
+                } else if (style.apply.indexOf(type) !== -1 && style.svg !== value) {
                     if ((style.svgAttr === "stroke" || style.svgAttr === "fill") && value.indexOf("rgba") !== -1) {
                         //separate alpha value, since illustrator can't handle it
                         regex = /rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d?\.?\d*)\s*\)/gi;
                         matches = regex.exec(value);
-                        currentElement.setAttribute(style.svgAttr, format("rgb({r},{g},{b})", {r:matches[1], g:matches[2], b:matches[3]}));
+                        currentElement.setAttribute(style.svgAttr, format("rgb({r},{g},{b})", { r: matches[1], g: matches[2], b: matches[3] }));
                         //should take globalAlpha here
                         var opacity = matches[4];
                         var globalAlpha = this.globalAlpha;
                         if (globalAlpha != null) {
                             opacity *= globalAlpha;
                         }
-                        currentElement.setAttribute(style.svgAttr+"-opacity", opacity);
+                        currentElement.setAttribute(style.svgAttr + "-opacity", opacity);
                     } else {
                         var attr = style.svgAttr;
                         if (keys[i] === 'globalAlpha') {
-                            attr = type+'-'+style.svgAttr;
+                            attr = type + '-' + style.svgAttr;
                             if (currentElement.getAttribute(attr)) {
-                                 //fill-opacity or stroke-opacity has already been set by stroke or fill.
+                                //fill-opacity or stroke-opacity has already been set by stroke or fill.
                                 continue;
                             }
                         }
@@ -422,6 +635,7 @@
         }
     };
 
+
     /**
      * Returns the serialized value of the svg so far
      * @param fixNamedEntities - Standalone SVG doesn't support named entities, which document.createTextNode encodes.
@@ -435,13 +649,13 @@
         //IE search for a duplicate xmnls because they didn't implement setAttributeNS correctly
         xmlns = /xmlns="http:\/\/www\.w3\.org\/2000\/svg".+xmlns="http:\/\/www\.w3\.org\/2000\/svg/gi;
         if (xmlns.test(serialized)) {
-            serialized = serialized.replace('xmlns="http://www.w3.org/2000/svg','xmlns:xlink="http://www.w3.org/1999/xlink');
+            serialized = serialized.replace('xmlns="http://www.w3.org/2000/svg', 'xmlns:xlink="http://www.w3.org/1999/xlink');
         }
 
         if (fixNamedEntities) {
             keys = Object.keys(namedEntities);
             //loop over each named entity and replace with the proper equivalent.
-            for (i=0; i<keys.length; i++) {
+            for (i = 0; i < keys.length; i++) {
                 key = keys[i];
                 value = namedEntities[key];
                 regexp = new RegExp(key, "gi");
@@ -495,11 +709,11 @@
         //if the current element has siblings, add another group
         var parent = this.__closestGroupOrSvg();
         if (parent.childNodes.length > 0) {
-        	if (this.__currentElement.nodeName === "path") {
-        		if (!this.__currentElementsToStyle) this.__currentElementsToStyle = {element: parent, children: []};
-        		this.__currentElementsToStyle.children.push(this.__currentElement)
-        		this.__applyCurrentDefaultPath();
-        	}
+            if (this.__currentElement.nodeName === "path") {
+                if (!this.__currentElementsToStyle) this.__currentElementsToStyle = { element: parent, children: [] };
+                this.__currentElementsToStyle.children.push(this.__currentElement)
+                this.__applyCurrentDefaultPath();
+            }
 
             var group = this.__createElement("g");
             parent.appendChild(group);
@@ -520,38 +734,110 @@
      *  scales the current element
      */
     ctx.prototype.scale = function (x, y) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+           // console.log(`ctx.prototype.scale ${x} ${y}`);
+            this.__ctx.scale(x, y);
+        }
+
+        this.__scale(x, y);
+    };
+
+    /**
+    * __scale internal to SVG scales the current element
+    */
+    ctx.prototype.__scale = function (x, y) {
+
         if (y === undefined) {
             y = x;
         }
-        this.__addTransform(format("scale({x},{y})", {x:x, y:y}));
+        this.__addTransform(format("scale({x},{y})", { x: x, y: y }));
     };
 
     /**
      * rotates the current element
      */
     ctx.prototype.rotate = function (angle) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.rotate ${angle}`);
+            this.__ctx.rotate(angle);
+        }
+
+        this.__rotate(angle);
+    };
+
+    /**
+    * __rotate internal to SVG rotates the current element
+    */
+    ctx.prototype.__rotate = function (angle) {
         var degrees = (angle * 180 / Math.PI);
-        this.__addTransform(format("rotate({angle},{cx},{cy})", {angle:degrees, cx:0, cy:0}));
+        this.__addTransform(format("rotate({angle},{cx},{cy})", { angle: degrees, cx: 0, cy: 0 }));
     };
 
     /**
      * translates the current element
      */
     ctx.prototype.translate = function (x, y) {
-        this.__addTransform(format("translate({x},{y})", {x:x,y:y}));
+
+        //isaque adicionou
+        if (this.__ctx) {
+           // console.log(`ctx.prototype.translate ${x} ${y}`);
+            this.__ctx.translate(x, y);
+        }
+
+        this.__translate(x, y);
+    };
+
+    /**
+    * __translate internal to SVG translates the current element
+    */
+    ctx.prototype.__translate = function (x, y) {
+        this.__addTransform(format("translate({x},{y})", { x: x, y: y }));
     };
 
     /**
      * applies a transform to the current element
      */
     ctx.prototype.transform = function (a, b, c, d, e, f) {
-        this.__addTransform(format("matrix({a},{b},{c},{d},{e},{f})", {a:a, b:b, c:c, d:d, e:e, f:f}));
+
+        //isaque adicionou
+        if (this.__ctx) {
+           // console.log(`ctx.prototype.transform ${a} ${b}`);
+            this.__ctx.transform(a, b, c, d, e, f);
+        }
+
+        this.__transform(a, b, c, d, e, f);
+    };
+
+    /**
+    * __transform internal to SVG applies a transform to the current element
+    */
+    ctx.prototype.__transform = function (a, b, c, d, e, f) {
+
+        this.__addTransform(format("matrix({a},{b},{c},{d},{e},{f})", { a: a, b: b, c: c, d: d, e: e, f: f }));
     };
 
     /**
      * Create a new Path Element
      */
     ctx.prototype.beginPath = function () {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.beginPath `);
+            this.__ctx.beginPath();
+        }
+        this.__beginPath();
+    };
+
+    /**
+     * __beginPath internal to SVG Create a new Path Element
+     */
+    ctx.prototype.__beginPath = function () {
+
         var path, parent;
 
         // Note that there is only one current default path, it is not part of the drawing state.
@@ -570,11 +856,11 @@
      * @private
      */
     ctx.prototype.__applyCurrentDefaultPath = function () {
-    	var currentElement = this.__currentElement;
+        var currentElement = this.__currentElement;
         if (currentElement.nodeName === "path") {
-			currentElement.setAttribute("d", this.__currentDefaultPath);
+            currentElement.setAttribute("d", this.__currentDefaultPath);
         } else {
-			console.error("Attempted to apply path command to node", currentElement.nodeName);
+            console.error("Attempted to apply path command to node", currentElement.nodeName);
         }
     };
 
@@ -591,20 +877,50 @@
      * Adds the move command to the current path element,
      * if the currentPathElement is not empty create a new path element
      */
-    ctx.prototype.moveTo = function (x,y) {
+    ctx.prototype.moveTo = function (x, y) {
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.moveTo `);
+            this.__ctx.moveTo(x, y);
+        }
+
+        this.__moveTo(x, y);
+    };
+
+    /**
+    * __moveTo internal to SVG  Adds the move command to the current path element,
+    * if the currentPathElement is not empty create a new path element
+    */
+    ctx.prototype.__moveTo = function (x, y) {
+
         if (this.__currentElement.nodeName !== "path") {
-            this.beginPath();
+            this.__beginPath();
         }
 
         // creates a new subpath with the given point
-        this.__currentPosition = {x: x, y: y};
-        this.__addPathCommand(format("M {x} {y}", {x:x, y:y}));
+        this.__currentPosition = { x: x, y: y };
+        this.__addPathCommand(format("M {x} {y}", { x: x, y: y }));
     };
 
     /**
      * Closes the current path
      */
     ctx.prototype.closePath = function () {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.closePath `);
+            this.__ctx.closePath();
+        }
+        this.__closePath();
+
+    };
+
+    /**
+   * __closePath internal to SVG Closes the current path
+   */
+    ctx.prototype.__closePath = function () {
+
         if (this.__currentDefaultPath) {
             this.__addPathCommand("Z");
         }
@@ -614,11 +930,27 @@
      * Adds a line to command
      */
     ctx.prototype.lineTo = function (x, y) {
-        this.__currentPosition = {x: x, y: y};
+
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.lineTo `);
+            this.__ctx.lineTo(x, y);
+        }
+
+        this.__lineTo(x, y);
+    };
+
+    /**
+     * __lineTo internal for SVG 
+     * Adds a line to command
+     */
+    ctx.prototype.__lineTo = function (x, y) {
+
+        this.__currentPosition = { x: x, y: y };
         if (this.__currentDefaultPath.indexOf('M') > -1) {
-            this.__addPathCommand(format("L {x} {y}", {x:x, y:y}));
+            this.__addPathCommand(format("L {x} {y}", { x: x, y: y }));
         } else {
-            this.__addPathCommand(format("M {x} {y}", {x:x, y:y}));
+            this.__addPathCommand(format("M {x} {y}", { x: x, y: y }));
         }
     };
 
@@ -626,17 +958,49 @@
      * Add a bezier command
      */
     ctx.prototype.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
-        this.__currentPosition = {x: x, y: y};
+
+        //isaque adicionou
+        if (this.__ctx) {
+           // console.log(`ctx.prototype.bezierCurveTo `);
+            this.__ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+        }
+
+        this.__bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+    };
+
+    /**
+     * __bezierCurveTo internal to SVG
+     * Add a bezier command
+     */
+    ctx.prototype.__bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
+
+        this.__currentPosition = { x: x, y: y };
         this.__addPathCommand(format("C {cp1x} {cp1y} {cp2x} {cp2y} {x} {y}",
-            {cp1x:cp1x, cp1y:cp1y, cp2x:cp2x, cp2y:cp2y, x:x, y:y}));
+            { cp1x: cp1x, cp1y: cp1y, cp2x: cp2x, cp2y: cp2y, x: x, y: y }));
     };
 
     /**
      * Adds a quadratic curve to command
      */
     ctx.prototype.quadraticCurveTo = function (cpx, cpy, x, y) {
-        this.__currentPosition = {x: x, y: y};
-        this.__addPathCommand(format("Q {cpx} {cpy} {x} {y}", {cpx:cpx, cpy:cpy, x:x, y:y}));
+
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.quadraticCurveTo `);
+            this.__ctx.quadraticCurveTo(cpx, cpy, x, y);
+        }
+
+        this.__quadraticCurveTo(cpx, cpy, x, y);
+    };
+
+    /**
+     * __quadraticCurveTo internal to SVG
+     * Adds a quadratic curve to command
+     */
+    ctx.prototype.__quadraticCurveTo = function (cpx, cpy, x, y) {
+
+        this.__currentPosition = { x: x, y: y };
+        this.__addPathCommand(format("Q {cpx} {cpy} {x} {y}", { cpx: cpx, cpy: cpy, x: x, y: y }));
     };
 
 
@@ -644,6 +1008,7 @@
      * Return a new normalized vector of given vector
      */
     var normalize = function (vector) {
+        //console.log(`ctx.prototype.normalize `);
         var len = Math.sqrt(vector[0] * vector[0] + vector[1] * vector[1]);
         return [vector[0] / len, vector[1] / len];
     };
@@ -654,6 +1019,24 @@
      * @see http://www.w3.org/TR/2015/WD-2dcontext-20150514/#dom-context-2d-arcto
      */
     ctx.prototype.arcTo = function (x1, y1, x2, y2, radius) {
+
+        //isaque adicionou 
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.arcTo `);
+            this.__ctx.arcTo(x1, y1, x2, y2, radius);
+        }
+
+        this.__arcTo(x1, y1, x2, y2, radius);
+    };
+
+    /**
+     * __arcTo internal to SVG
+     * Adds the arcTo to the current path
+     *
+     * @see http://www.w3.org/TR/2015/WD-2dcontext-20150514/#dom-context-2d-arcto
+     */
+    ctx.prototype.__arcTo = function (x1, y1, x2, y2, radius) {
+
         // Let the point (x0, y0) be the last point in the subpath.
         var x0 = this.__currentPosition && this.__currentPosition.x;
         var y0 = this.__currentPosition && this.__currentPosition.y;
@@ -676,7 +1059,7 @@
         if (((x0 === x1) && (y0 === y1))
             || ((x1 === x2) && (y1 === y2))
             || (radius === 0)) {
-            this.lineTo(x1, y1);
+            this.__lineTo(x1, y1);
             return;
         }
 
@@ -686,7 +1069,7 @@
         var unit_vec_p1_p0 = normalize([x0 - x1, y0 - y1]);
         var unit_vec_p1_p2 = normalize([x2 - x1, y2 - y1]);
         if (unit_vec_p1_p0[0] * unit_vec_p1_p2[1] === unit_vec_p1_p0[1] * unit_vec_p1_p2[0]) {
-            this.lineTo(x1, y1);
+            this.__lineTo(x1, y1);
             return;
         }
 
@@ -733,18 +1116,37 @@
         var endAngle = getAngle(unit_vec_origin_end_tangent);
 
         // Connect the point (x0, y0) to the start tangent point by a straight line
-        this.lineTo(x + unit_vec_origin_start_tangent[0] * radius,
-                    y + unit_vec_origin_start_tangent[1] * radius);
+        this.__lineTo(x + unit_vec_origin_start_tangent[0] * radius,
+            y + unit_vec_origin_start_tangent[1] * radius);
 
         // Connect the start tangent point to the end tangent point by arc
         // and adding the end tangent point to the subpath.
-        this.arc(x, y, radius, startAngle, endAngle);
+        this.__arc(x, y, radius, startAngle, endAngle);
     };
 
     /**
      * Sets the stroke property on the current element
      */
-    ctx.prototype.stroke = function () {
+    ctx.prototype.stroke = function (path) {
+        // console.log('ctx.prototype.stroke');
+        //isaque adicionou
+        if (this.__ctx) {
+            if (arguments.length == 0) {
+                this.__ctx.stroke();
+            } else if (arguments.length == 1) {
+                this.__ctx.stroke(path);
+            }
+        }
+
+        this.__stroke();
+    };
+
+    /**
+    * internal to SVG 
+    *  Sets the stroke property on the current element
+    */
+    ctx.prototype.__stroke = function () {
+
         if (this.__currentElement.nodeName === "path") {
             this.__currentElement.setAttribute("paint-order", "fill stroke markers");
         }
@@ -756,6 +1158,21 @@
      * Sets fill properties on the current element
      */
     ctx.prototype.fill = function () {
+        // console.log('ctx.prototype.fill');
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.fill();
+        }
+
+        this.__fill();
+    };
+
+    /**
+     * __fill internal to SVG
+     * Sets fill properties on the current element
+     */
+    ctx.prototype.__fill = function () {
+
         if (this.__currentElement.nodeName === "path") {
             this.__currentElement.setAttribute("paint-order", "stroke fill markers");
         }
@@ -767,15 +1184,29 @@
      *  Adds a rectangle to the path.
      */
     ctx.prototype.rect = function (x, y, width, height) {
-        if (this.__currentElement.nodeName !== "path") {
-            this.beginPath();
+
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.rect(x, y, width, height);
         }
-        this.moveTo(x, y);
-        this.lineTo(x+width, y);
-        this.lineTo(x+width, y+height);
-        this.lineTo(x, y+height);
-        this.lineTo(x, y);
-        this.closePath();
+
+        this.__rect(x, y, width, height);
+    };
+
+    /**
+    * __rect intrenal Adds a rectangle to the path.
+    */
+    ctx.prototype.__rect = function (x, y, width, height) {
+
+        if (this.__currentElement.nodeName !== "path") {
+            this.__beginPath();
+        }
+        this.__moveTo(x, y);
+        this.__lineTo(x + width, y);
+        this.__lineTo(x + width, y + height);
+        this.__lineTo(x, y + height);
+        this.__lineTo(x, y);
+        this.__closePath();
     };
 
 
@@ -783,12 +1214,26 @@
      * adds a rectangle element
      */
     ctx.prototype.fillRect = function (x, y, width, height) {
+        // console.log(' ctx.prototype.fillRect ');        
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.fillRect(x, y, width, height);
+        }
+
+        this.__fillRect(x, y, width, height);
+    };
+
+    /**
+    * adds a rectangle element
+    */
+    ctx.prototype.__fillRect = function (x, y, width, height) {
+
         var rect, parent;
         rect = this.__createElement("rect", {
-            x : x,
-            y : y,
-            width : width,
-            height : height
+            x: x,
+            y: y,
+            width: width,
+            height: height
         }, true);
         parent = this.__closestGroupOrSvg();
         parent.appendChild(rect);
@@ -804,12 +1249,23 @@
      * @param height
      */
     ctx.prototype.strokeRect = function (x, y, width, height) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.strokeRect(x, y, width, height);
+        }
+
+        this.__strokeRect(x, y, width, height);
+    };
+
+    ctx.prototype.__strokeRect = function (x, y, width, height) {
+
         var rect, parent;
         rect = this.__createElement("rect", {
-            x : x,
-            y : y,
-            width : width,
-            height : height
+            x: x,
+            y: y,
+            width: width,
+            height: height
         }, true);
         parent = this.__closestGroupOrSvg();
         parent.appendChild(rect);
@@ -824,6 +1280,8 @@
      * 2. remove all the childNodes of the root g element
      */
     ctx.prototype.__clearCanvas = function () {
+        //console.log('ctx.prototype.__clearCanvas');
+
         var current = this.__closestGroupOrSvg(),
             transform = current.getAttribute("transform");
         var rootGroup = this.__root.childNodes[1];
@@ -845,6 +1303,17 @@
      * "Clears" a canvas by just drawing a white rectangle in the current group.
      */
     ctx.prototype.clearRect = function (x, y, width, height) {
+        //console.log('ctx.prototype.clearRect');
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.clearRect(x, y, width, height);
+        }
+        this.__clearRect(x, y, width, height);
+
+    };
+
+    ctx.prototype.__clearRect = function (x, y, width, height) {
+
         //clear entire canvas
         if (x === 0 && y === 0 && width === this.width && height === this.height) {
             this.__clearCanvas();
@@ -852,11 +1321,11 @@
         }
         var rect, parent = this.__closestGroupOrSvg();
         rect = this.__createElement("rect", {
-            x : x,
-            y : y,
-            width : width,
-            height : height,
-            fill : "#FFFFFF"
+            x: x,
+            y: y,
+            width: width,
+            height: height,
+            fill: "#FFFFFF"
         }, true);
         parent.appendChild(rect);
     };
@@ -866,13 +1335,19 @@
      * Returns a canvas gradient object that has a reference to it's parent def
      */
     ctx.prototype.createLinearGradient = function (x1, y1, x2, y2) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.createLinearGradient(x1, y1, x2, y2);
+        }
+
         var grad = this.__createElement("linearGradient", {
-            id : randomString(this.__ids),
-            x1 : x1+"px",
-            x2 : x2+"px",
-            y1 : y1+"px",
-            y2 : y2+"px",
-            "gradientUnits" : "userSpaceOnUse"
+            id: randomString(this.__ids),
+            x1: x1 + "px",
+            x2: x2 + "px",
+            y1: y1 + "px",
+            y2: y2 + "px",
+            "gradientUnits": "userSpaceOnUse"
         }, false);
         this.__defs.appendChild(grad);
         return new CanvasGradient(grad, this);
@@ -883,14 +1358,20 @@
      * Returns a canvas gradient object that has a reference to it's parent def
      */
     ctx.prototype.createRadialGradient = function (x0, y0, r0, x1, y1, r1) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.createRadialGradient(x0, y0, r0, x1, y1, r1);
+        }
+
         var grad = this.__createElement("radialGradient", {
-            id : randomString(this.__ids),
-            cx : x1+"px",
-            cy : y1+"px",
-            r  : r1+"px",
-            fx : x0+"px",
-            fy : y0+"px",
-            "gradientUnits" : "userSpaceOnUse"
+            id: randomString(this.__ids),
+            cx: x1 + "px",
+            cy: y1 + "px",
+            r: r1 + "px",
+            fx: x0 + "px",
+            fy: y0 + "px",
+            "gradientUnits": "userSpaceOnUse"
         }, false);
         this.__defs.appendChild(grad);
         return new CanvasGradient(grad, this);
@@ -903,14 +1384,14 @@
      */
     ctx.prototype.__parseFont = function () {
         var regex = /^\s*(?=(?:(?:[-a-z]+\s*){0,2}(italic|oblique))?)(?=(?:(?:[-a-z]+\s*){0,2}(small-caps))?)(?=(?:(?:[-a-z]+\s*){0,2}(bold(?:er)?|lighter|[1-9]00))?)(?:(?:normal|\1|\2|\3)\s*){0,3}((?:xx?-)?(?:small|large)|medium|smaller|larger|[.\d]+(?:\%|in|[cem]m|ex|p[ctx]))(?:\s*\/\s*(normal|[.\d]+(?:\%|in|[cem]m|ex|p[ctx])))?\s*([-,\'\"\sa-z0-9]+?)\s*$/i;
-        var fontPart = regex.exec( this.font );
+        var fontPart = regex.exec(this.font);
         var data = {
-            style : fontPart[1] || 'normal',
-            size : fontPart[4] || '10px',
-            family : fontPart[6] || 'sans-serif',
+            style: fontPart[1] || 'normal',
+            size: fontPart[4] || '10px',
+            family: fontPart[6] || 'sans-serif',
             weight: fontPart[3] || 'normal',
-            decoration : fontPart[2] || 'normal',
-            href : null
+            decoration: fontPart[2] || 'normal',
+            href: null
         };
 
         //canvas doesn't support underline natively, but we can pass this attribute
@@ -955,13 +1436,13 @@
         var font = this.__parseFont(),
             parent = this.__closestGroupOrSvg(),
             textElement = this.__createElement("text", {
-                "font-family" : font.family,
-                "font-size" : font.size,
-                "font-style" : font.style,
-                "font-weight" : font.weight,
-                "text-decoration" : font.decoration,
-                "x" : x,
-                "y" : y,
+                "font-family": font.family,
+                "font-size": font.size,
+                "font-style": font.style,
+                "font-weight": font.weight,
+                "text-decoration": font.decoration,
+                "x": x,
+                "y": y,
                 "text-anchor": getTextAnchor(this.textAlign),
                 "dominant-baseline": getDominantBaseline(this.textBaseline)
             }, true);
@@ -969,7 +1450,7 @@
         textElement.appendChild(this.__document.createTextNode(text));
         this.__currentElement = textElement;
         this.__applyStyleToCurrentElement(action);
-        parent.appendChild(this.__wrapTextLink(font,textElement));
+        parent.appendChild(this.__wrapTextLink(font, textElement));
     };
 
     /**
@@ -978,7 +1459,12 @@
      * @param x
      * @param y
      */
-    ctx.prototype.fillText = function (text, x, y) {
+    ctx.prototype.fillText = function (text, x, y, maxWidth) {
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.fillText(text, x, y, maxWidth);
+        }
+
         this.__applyText(text, x, y, "fill");
     };
 
@@ -988,7 +1474,12 @@
      * @param x
      * @param y
      */
-    ctx.prototype.strokeText = function (text, x, y) {
+    ctx.prototype.strokeText = function (text, x, y, maxWidth) {
+        //isaque adicionou
+        if (this.__ctx) {
+            this.__ctx.fillText(strokeText, x, y, maxWidth);
+        }
+
         this.__applyText(text, x, y, "stroke");
     };
 
@@ -998,6 +1489,7 @@
      * @return {TextMetrics}
      */
     ctx.prototype.measureText = function (text) {
+
         this.__ctx.font = this.font;
         return this.__ctx.measureText(text);
     };
@@ -1006,49 +1498,91 @@
      *  Arc command!
      */
     ctx.prototype.arc = function (x, y, radius, startAngle, endAngle, counterClockwise) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            if (arguments.length == 5) {
+                //console.log(`ctx.prototype.arc 5: ${x} ${y} ${radius} ${startAngle} ${endAngle} `);
+                this.__ctx.arc(x, y, radius, startAngle, endAngle);
+            } else if (arguments.length == 6) {
+                //console.log(`ctx.prototype.arc 6: ${x} ${y} ${radius} ${startAngle} ${endAngle} ${counterClockwise}`);
+                this.__ctx.arc(x, y, radius, startAngle, endAngle, counterClockwise);
+            }
+        }
+
+        this.__arc(x, y, radius, startAngle, endAngle, counterClockwise);
+    };
+
+    /**
+     *  __arc internal to SVG
+     */
+    ctx.prototype.__arc = function (x, y, radius, startAngle, endAngle, counterClockwise) {
+
         // in canvas no circle is drawn if no angle is provided.
-        if (startAngle === endAngle) {
-            return;
-        }
-        startAngle = startAngle % (2*Math.PI);
-        endAngle = endAngle % (2*Math.PI);
-        if (startAngle === endAngle) {
-            //circle time! subtract some of the angle so svg is happy (svg elliptical arc can't draw a full circle)
-            endAngle = ((endAngle + (2*Math.PI)) - 0.001 * (counterClockwise ? -1 : 1)) % (2*Math.PI);
-        }
-        var endX = x+radius*Math.cos(endAngle),
-            endY = y+radius*Math.sin(endAngle),
-            startX = x+radius*Math.cos(startAngle),
-            startY = y+radius*Math.sin(startAngle),
-            sweepFlag = counterClockwise ? 0 : 1,
-            largeArcFlag = 0,
-            diff = endAngle - startAngle;
+        if (startAngle !== endAngle) {
 
-        // https://github.com/gliffy/canvas2svg/issues/4
-        if (diff < 0) {
-            diff += 2*Math.PI;
+            startAngle = startAngle % (2 * Math.PI);
+            endAngle = endAngle % (2 * Math.PI);
+            if (startAngle === endAngle) {
+                //circle time! subtract some of the angle so svg is happy (svg elliptical arc can't draw a full circle)
+                endAngle = ((endAngle + (2 * Math.PI)) - 0.001 * (counterClockwise ? -1 : 1)) % (2 * Math.PI);
+            }
+            var endX = x + radius * Math.cos(endAngle),
+                endY = y + radius * Math.sin(endAngle),
+                startX = x + radius * Math.cos(startAngle),
+                startY = y + radius * Math.sin(startAngle),
+                sweepFlag = counterClockwise ? 0 : 1,
+                largeArcFlag = 0,
+                diff = endAngle - startAngle;
+
+            // https://github.com/gliffy/canvas2svg/issues/4
+            if (diff < 0) {
+                diff += 2 * Math.PI;
+            }
+
+            if (counterClockwise) {
+                largeArcFlag = diff > Math.PI ? 0 : 1;
+            } else {
+                largeArcFlag = diff > Math.PI ? 1 : 0;
+            }
+
+            this.__lineTo(startX, startY);
+            this.__addPathCommand(format("A {rx} {ry} {xAxisRotation} {largeArcFlag} {sweepFlag} {endX} {endY}",
+                { rx: radius, ry: radius, xAxisRotation: 0, largeArcFlag: largeArcFlag, sweepFlag: sweepFlag, endX: endX, endY: endY }));
+
+            this.__currentPosition = { x: endX, y: endY };
         }
-
-        if (counterClockwise) {
-            largeArcFlag = diff > Math.PI ? 0 : 1;
-        } else {
-            largeArcFlag = diff > Math.PI ? 1 : 0;
-        }
-
-        this.lineTo(startX, startY);
-        this.__addPathCommand(format("A {rx} {ry} {xAxisRotation} {largeArcFlag} {sweepFlag} {endX} {endY}",
-            {rx:radius, ry:radius, xAxisRotation:0, largeArcFlag:largeArcFlag, sweepFlag:sweepFlag, endX:endX, endY:endY}));
-
-        this.__currentPosition = {x: endX, y: endY};
     };
 
     /**
      * Generates a ClipPath from the clip command.
      */
-    ctx.prototype.clip = function () {
+    ctx.prototype.clip = function (a, b) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            if (arguments.length == 0) {
+                //console.log(`ctx.prototype.clip ${a} `);
+                this.__ctx.clip();
+            } else if (arguments.length == 1) {
+                //console.log(`ctx.prototype.clip ${a}`);
+                this.__ctx.clip(a);
+            } else if (arguments.length == 2) {
+                //console.log(`ctx.prototype.clip ${a} ${b}`);
+                this.__ctx.clip(a, b);
+            }
+        }
+
+        this.__clip(a, b);
+
+    };
+
+
+    ctx.prototype.__clip = function (a, b) {
+
         var group = this.__closestGroupOrSvg(),
             clipPath = this.__createElement("clipPath"),
-            id =  randomString(this.__ids),
+            id = randomString(this.__ids),
             newGroup = this.__createElement("g");
 
         this.__applyCurrentDefaultPath();
@@ -1059,7 +1593,7 @@
         this.__defs.appendChild(clipPath);
 
         //set the clip path to this group
-        group.setAttribute("clip-path", format("url(#{id})", {id:id}));
+        group.setAttribute("clip-path", format("url(#{id})", { id: id }));
 
         //clip paths can be scaled and transformed, we need to add another wrapper group to avoid later transformations
         // to this path
@@ -1074,11 +1608,30 @@
      * Note that all svg dom manipulation uses node.childNodes rather than node.children for IE support.
      * http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#dom-context-2d-drawimage
      */
-    ctx.prototype.drawImage = function () {
+    ctx.prototype.drawImage = function (image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.drawImage ${image} ${sx}`);
+            if (arguments.length == 3) {
+                this.__ctx.drawImage(image, sx, sy);
+            } else if (arguments.length == 5) {
+                this.__ctx.drawImage(image, sx, sy, sWidth, sHeight);
+            } else if (arguments.length == 9) {
+                this.__ctx.drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            }
+        }
+
+        this.__drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+    };
+
+
+    ctx.prototype.__drawImage = function (image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight) {
+
+
         //convert arguments to a real array
         var args = Array.prototype.slice.call(arguments),
-            image=args[0],
-            dx, dy, dw, dh, sx=0, sy=0, sw, sh, parent, svg, defs, group,
+            image = args[0],
+            dx, dy, dw, dh, sx = 0, sy = 0, sw, sh, parent, svg, defs, group,
             currentElement, svgImage, canvas, context, id;
 
         if (args.length === 3) {
@@ -1117,7 +1670,7 @@
             svg = image.getSvg().cloneNode(true);
             if (svg.childNodes && svg.childNodes.length > 1) {
                 defs = svg.childNodes[0];
-                while(defs.childNodes.length) {
+                while (defs.childNodes.length) {
                     id = defs.childNodes[0].getAttribute("id");
                     this.__ids[id] = id;
                     this.__defs.appendChild(defs.childNodes[0]);
@@ -1128,7 +1681,7 @@
                     var originTransform = group.getAttribute("transform");
                     var transformDirective;
                     if (originTransform) {
-                        transformDirective = originTransform+" "+translateDirective;
+                        transformDirective = originTransform + " " + translateDirective;
                     } else {
                         transformDirective = translateDirective;
                     }
@@ -1159,10 +1712,18 @@
         }
     };
 
+
     /**
      * Generates a pattern tag
      */
     ctx.prototype.createPattern = function (image, repetition) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log(`ctx.prototype.createPattern ${image} ${repetition}`);
+            this.__ctx.createPattern(image, repetition);
+        }
+
         var pattern = this.__document.createElementNS("http://www.w3.org/2000/svg", "pattern"), id = randomString(this.__ids),
             img;
         pattern.setAttribute("id", id);
@@ -1184,6 +1745,25 @@
     };
 
     ctx.prototype.setLineDash = function (dashArray) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+
+            if (arguments.length == 0) {
+                //console.log(`ctx.prototype.setLineDash ${dashArray}`);
+                this.__ctx.setLineDash();
+            } else if (arguments.length == 1) {
+                //console.log(`ctx.prototype.setLineDash ${dashArray}`);
+                this.__ctx.setLineDash(dashArray);
+            }
+        }
+
+        this.__setLineDash(dashArray);
+    };
+
+
+    ctx.prototype.__setLineDash = function (dashArray) {
+
         if (dashArray && dashArray.length > 0) {
             this.lineDash = dashArray.join(",");
         } else {
@@ -1191,15 +1771,138 @@
         }
     };
 
+    /* Chart JS v4.2.1 Compatibility */
+    ctx.prototype.getContext = function (contextId) {
+        //console.log(`ctx.prototype.getContext ${contextId}`);
+        if (String(contextId).toUpperCase() == '2D') {
+            return this
+        }
+        return null
+    }
+    ctx.prototype.getContext2d = function () {
+        //console.log('ctx.prototype.getContext2d');
+        return this.__ctx;
+    }
+    ctx.prototype.style = function () {
+        //console.log('ctx.prototype.style');
+        return this.__canvas.style;
+    }
+    ctx.prototype.getAttribute = function (prop_name) {
+        //console.log(`ctx.prototype.getAttribute ${prop_name} ${this[prop_name]}`);
+        return this[prop_name]
+    }
+
+
     /**
      * Not yet implemented
      */
-    ctx.prototype.drawFocusRing = function () {};
-    ctx.prototype.createImageData = function () {};
-    ctx.prototype.getImageData = function () {};
-    ctx.prototype.putImageData = function () {};
-    ctx.prototype.globalCompositeOperation = function () {};
-    ctx.prototype.setTransform = function () {};
+    ctx.prototype.drawFocusRing = function () {
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log('ctx.prototype.drawFocusRing');
+            return this.__ctx.drawFocusRing();
+        }
+    };
+    ctx.prototype.createImageData = function () {
+        //isaque adicionou
+        if (this.__ctx) {
+           // console.log('ctx.prototype.createImageData');
+            return this.__ctx.createImageData();
+        }
+    };
+    ctx.prototype.getImageData = function () {
+        //isaque adicionou
+        if (this.__ctx) {
+           // console.log('ctx.prototype.getImageData');
+            return this.__ctx.getImageData();
+        }
+    };
+    ctx.prototype.putImageData = function () {
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log('ctx.prototype.putImageData');
+            return this.__ctx.putImageData();
+        }
+    };
+
+
+    /**
+     * SetTransform changes the current transformation matrix to
+     * the matrix given by the arguments as described below.
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/setTransform
+     */
+    ctx.prototype.setTransform = function (a, b, c, d, e, f) {
+
+        //isaque adicionou
+        if (this.__ctx) {
+            if (arguments.length == 1) {
+                //console.log('ctx.prototype.setTransform');
+                this.__ctx.setTransform(a);
+            } else {
+                //console.log('ctx.prototype.setTransform');
+                this.__ctx.setTransform(a, b, c, d, e, f);
+            }
+        }
+
+        this.__setTransform(a, b, c, d, e, f);
+    };
+
+    ctx.prototype.__setTransform = function (a, b, c, d, e, f) {
+
+        if (a instanceof DOMMatrix) {
+            this.__transformMatrix = new DOMMatrix([a.a, a.b, a.c, a.d, a.e, a.f]);
+        } else {
+            this.__transformMatrix = new DOMMatrix([a, b, c, d, e, f]);
+        }
+    };
+
+    /**
+     * GetTransform Returns a copy of the current transformation matrix,
+     * as a newly created DOMMAtrix Object
+     *
+     * @returns A DOMMatrix Object
+     */
+    ctx.prototype.getTransform = function () {
+        //isaque adicionou
+        if (this.__ctx) {
+           // console.log('ctx.prototype.getTransform');
+            return this.__ctx.getTransform();
+        }
+        return __getTransform();
+    };
+
+
+    ctx.prototype.__getTransform = function () {
+        let { a, b, c, d, e, f } = this.__transformMatrix;
+        return new DOMMatrix([a, b, c, d, e, f]);
+    };
+
+    /**
+     * ResetTransform resets the current transformation matrix to the identity matrix
+     *
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/resetTransform
+     */
+    ctx.prototype.resetTransform = function () {
+        //isaque adicionou
+        if (this.__ctx) {
+            //console.log('ctx.prototype.resetTransform');
+            return this.__ctx.resetTransform();
+        }
+
+        this.__resetTransform();
+    };
+
+    ctx.prototype.__resetTransform = function () {
+
+        this.__setTransform(1, 0, 0, 1, 0, 0);
+    };
+
+
+    ctx.prototype.addEventListener = function (type, listener, eventListenerOptions) {
+        //console.log('ctx.prototype.addEventListener');
+        // this.__canvas.addEventListener(type, listener, eventListenerOptions);
+    };
 
     //add options for alternative namespace
     if (typeof window === "object") {
