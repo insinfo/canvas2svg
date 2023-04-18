@@ -6,6 +6,9 @@ using the canvas api. Why use it?
 * You like exporting things.
 * Because you didn't want to transform your custom file format to SVG.
 
+## updated 2023 to work with ChartJS 
+
+
 Demo
 ==========
 http://gliffy.github.io/canvas2svg/
